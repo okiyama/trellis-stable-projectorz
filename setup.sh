@@ -1,5 +1,5 @@
 # Read Arguments
-TEMP=`getopt -o h --long help,new-env,basic,xformers,flash-attn,diffoctreerast,vox2seq,spconv,mipgaussian,kaolin,nvdiffrast,demo -n 'setup.sh' -- "$@"`
+TEMP=`getopt -o h --long help,new-env,basic,xformers,flash-attn,diffoctreerast,vox2seq,spconv,mipgaussian,kaolin,nvdiffrast,gsplat,demo -n 'setup.sh' -- "$@"`
 
 eval set -- "$TEMP"
 
@@ -16,6 +16,7 @@ ERROR=false
 MIPGAUSSIAN=false
 KAOLIN=false
 NVDIFFRAST=false
+GSPLAT=false
 DEMO=false
 
 if [ "$#" -eq 1 ] ; then
