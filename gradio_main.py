@@ -1,6 +1,5 @@
 import os
 import sys
-import platform
 sys.path.append(os.getcwd())
 os.environ['ATTN_BACKEND'] = 'xformers'
 os.environ['SPCONV_ALGO'] = 'native' 
@@ -19,62 +18,6 @@ from trellis.pipelines import TrellisImageTo3DPipeline
 from trellis.representations import Gaussian, MeshExtractResult
 from trellis.utils import render_utils, postprocessing_utils
 
-
-# -------------LOW VRAM TESTING -------------
-
-
-# # only used for debugging, to emulate low-vram graphics cards:
-#
-#torch.cuda.set_per_process_memory_fraction(0.43)  # Limit to 43% of my available VRAM, for testing.
-# And/or set maximum split size (in MB)
-#os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128,garbage_collection_threshold:0.8'
-
-
-
-# -------------- INFO LOGGING ----------------
-
-print(
-    f""
-    f"[System Info] Python: {platform.python_version():<8} | "
-    f"PyTorch: {torch.__version__:<8} | "
-    f"CUDA: {'not available' if not torch.cuda.is_available() else torch.version.cuda}"
-)
-
-import logging
-
-class TritonFilter(logging.Filter):# Custom filter to ignore Triton messages
-    def filter(self, record):
-        message = record.getMessage().lower()
-        triton_phrases = [
-            "triton is not available",
-            "matching triton is not available",
-            "no module named 'triton'"
-        ]
-        return not any(phrase in message for phrase in triton_phrases)
-    
-logger = logging.getLogger("trellis")
-logger.setLevel(logging.INFO)
-logger.propagate = False  # Prevent messages from propagating to root
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s',  datefmt='%H:%M:%S'))
-#and to our own "trellis" logger:
-handler.addFilter(TritonFilter())
-logger.addHandler(handler)
-# other scripts can now use this logger by doing 'logger = logging.getLogger("trellis")'
-
-# Configure root logger:
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S', # Only show time
-    handlers=[logging.StreamHandler()]
-)
-# Apply TritonFilter to all root handlers
-root_logger = logging.getLogger()
-for handler in root_logger.handlers:
-    handler.addFilter(TritonFilter())
-
-
 # -------------- CMD ARGS PARSE -----------------
 
 # read command-line arguments, passed into this script when launching it:
@@ -87,28 +30,7 @@ parser.add_argument("--precision",
                     help="Set the size of variables for pipeline, to save VRAM and gain performance")
 cmd_args = parser.parse_args()
 
-
-# -------------- PIPELINE SETUP ----------------
-
-
-# Define a function to initialize the pipeline
-def initialize_pipeline(precision="full"):
-    global pipeline
-    pipeline = TrellisImageTo3DPipeline.from_pretrained("JeffreyXiang/TRELLIS-image-large")
-    # Apply precision settings. Reduce memory usage at the cost of numerical precision:
-    print('')
-    print(f"used precision: '{precision}'.  Loading...")
-    if precision == "half" or precision=="float16":
-        pipeline.to(torch.float16) #cuts memory usage in half
-        if "image_cond_model" in pipeline.models:
-            pipeline.models['image_cond_model'].half()  #cuts memory usage in half
-    # DO NOT MOVE TO CUDA YET. We'll be dynamically loading parts between 'cpu' and 'cuda' soon.
-    # Kept for precaution:
-    #    pipeline.cuda()
-
-
-# -------------- GRADIO SETUP AND LAUNCH ----------------
-
+# ------------------------------------------------
 
 
 MAX_SEED = np.iinfo(np.int32).max
@@ -493,7 +415,23 @@ with gr.Blocks(delete_cache=(600, 600)) as demo:
     )
 
 
+# Define a function to initialize the pipeline
+def initialize_pipeline(precision="full"):
+    global pipeline
+    pipeline = TrellisImageTo3DPipeline.from_pretrained("JeffreyXiang/TRELLIS-image-large")
+    # Apply precision settings. Reduce memory usage at the cost of numerical precision:
+    print('')
+    print(f"used precision: '{precision}'.  Loading...")
+    if precision == "half" or precision=="float16":
+        pipeline.to(torch.float16) #cuts memory usage in half
+        if "image_cond_model" in pipeline.models:
+            pipeline.models['image_cond_model'].half()  #cuts memory usage in half
+    # DO NOT MOVE TO CUDA YET. We'll be dynamically loading parts between 'cpu' and 'cuda' soon.
+    # Kept for precaution:
+    #    pipeline.cuda()
+
+
 # Launch the Gradio app
 if __name__ == "__main__":
     initialize_pipeline(cmd_args.precision)
-    demo.launch(server_name="127.0.0.1", server_port=7960)#7960 for gradio, same port as for api_spz/main_api.py
+    demo.launch()
