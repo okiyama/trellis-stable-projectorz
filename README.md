@@ -14,8 +14,10 @@ For now my fork uses flexicubes fork  https://github.com/IgorAherne/flexicubes-s
 I've changed it to use `int32` instead of `int64`, reducing memory by half during SLAT decoding stage.<br>
 
 <h2>If you want to install manually:</h2>
+
 install `code/requirements.txt`, and then follow steps in `code/install.py`
 Lastly, you will need to pip install wheel files, find them in `code/whl` folder.
+
 
 <br>
 <h2>Original Trellis Repo description:</h2>
