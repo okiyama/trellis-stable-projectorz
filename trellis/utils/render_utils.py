@@ -4,7 +4,7 @@ from tqdm import tqdm
 import utils3d
 from PIL import Image
 
-from ..renderers import OctreeRenderer, GaussianRenderer, MeshRenderer, GSplatRenderer
+from ..renderers import OctreeRenderer, GaussianRenderer, MeshRenderer
 from ..representations import Octree, Gaussian, MeshExtractResult
 from ..modules import sparse as sp
 from .random_utils import sphere_hammersley_sequence
@@ -45,7 +45,7 @@ def yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, rs, fovs, dtype=torch
     return extrinsics, intrinsics
 
 
-def render_frames(sample, extrinsics, intrinsics, options={}, colors_overwrite=None, verbose=True, gs_renderer='gsplat', cancel_event=None, **kwargs):
+def render_frames(sample, extrinsics, intrinsics, options={}, colors_overwrite=None, verbose=True, cancel_event=None, **kwargs):
     if isinstance(sample, Octree):
         renderer = OctreeRenderer()
         renderer.rendering_options.resolution = options.get('resolution', 512)
@@ -55,10 +55,7 @@ def render_frames(sample, extrinsics, intrinsics, options={}, colors_overwrite=N
         renderer.rendering_options.ssaa = options.get('ssaa', 4)
         renderer.pipe.primitive = sample.primitive
     elif isinstance(sample, Gaussian):
-        if gs_renderer == 'gsplat':
-            renderer = GSplatRenderer()
-        else:
-            renderer = GaussianRenderer()
+        renderer = GaussianRenderer()
         renderer.rendering_options.resolution = options.get('resolution', 512)
         renderer.rendering_options.near = options.get('near', 0.8)
         renderer.rendering_options.far = options.get('far', 1.6)
@@ -118,7 +115,7 @@ def render_video(sample, resolution=512, bg_color=(0, 0, 0), num_frames=30, r=2,
     return render_frames(sample, extrinsics, intrinsics, {'resolution': resolution, 'bg_color': bg_color}, cancel_event=cancel_event, **kwargs)
 
 
-def render_multiview(sample, resolution=512, nviews=30, gs_renderer='gsplat', cancel_event=None):
+def render_multiview(sample, resolution=512, nviews=30, cancel_event=None):
     # Dynamically check for the dtype,  so that float16, float32 work:
     if hasattr(sample, 'vertices') and hasattr(sample.vertices, 'dtype'):
         dtype = sample.vertices.dtype
@@ -130,9 +127,8 @@ def render_multiview(sample, resolution=512, nviews=30, gs_renderer='gsplat', ca
     cams = [sphere_hammersley_sequence(i, nviews) for i in range(nviews)]
     yaws = [cam[0] for cam in cams]
     pitchs = [cam[1] for cam in cams]
-    extrinsics, intrinsics = yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, r, fov)
-    res = render_frames(sample, extrinsics, intrinsics, {'resolution': resolution, 'bg_color': (0, 0, 0)},
-                        gs_renderer=gs_renderer, cancel_event=cancel_event)
+    extrinsics, intrinsics = yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, r, fov, dtype=dtype)
+    res = render_frames(sample, extrinsics, intrinsics, {'resolution': resolution, 'bg_color': (0, 0, 0)}, cancel_event=cancel_event)
     return res['color'], extrinsics, intrinsics
 
 
