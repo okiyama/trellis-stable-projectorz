@@ -8,7 +8,9 @@ This makes the whole algorithm fit into the VRAM of 8GB GPU cards, if they suppo
 I also added API support to generate via FastAPI, from c# etc.<br>
 FishWoWaters added Gradio support.<br>
 
-Uses flexicubes fork  https://github.com/IgorAherne/flexicubes-stable-projectorz<br>
+In the process of integrating fork of Jonathan Clark, to remove dependencies that cause Trellis to be non-commercial
+
+For now my fork uses flexicubes fork  https://github.com/IgorAherne/flexicubes-stable-projectorz<br>
 I've changed it to use `int32` instead of `int64`, reducing memory by half during SLAT decoding stage.<br>
 
 <br>
