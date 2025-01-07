@@ -13,7 +13,7 @@ In the process of integrating fork of Jonathan Clark, to remove dependencies tha
 For now my fork uses flexicubes fork  https://github.com/IgorAherne/flexicubes-stable-projectorz<br>
 I've changed it to use `int32` instead of `int64`, reducing memory by half during SLAT decoding stage.<br>
 
-<h2>If you want to install manually:</h2>h2>
+<h2>If you want to install manually:</h2>
 install `code/requirements.txt`, and then follow steps in `code/install.py`
 Lastly, you will need to pip install wheel files, find them in `code/whl` folder.
 
