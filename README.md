@@ -15,8 +15,12 @@ I've changed it to use `int32` instead of `int64`, reducing memory by half durin
 
 <h2>If you want to install manually:</h2>
 
-use python 3.11, install `code/requirements.txt`, and then follow steps in `code/install.py`
-Lastly, you will need to pip install wheel files, find them in `code/whl` folder.
+1) use python 3.11
+3) install `code/requirements.txt`
+4) and then follow steps in `code/install.py`
+5) you will need to pip install wheel files, find them in `code/whl` folder.
+4) Lastly, from inside the `code` folder, do `git submodule update --init --recursive` to make sure flexicubes sub-repo is installed
+
 
 
 <br>
